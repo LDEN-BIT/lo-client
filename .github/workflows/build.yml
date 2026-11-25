@@ -16,7 +16,8 @@ jobs:
         with:
           gradle-version: 9.2.0
       - run: gradle build
+        working-directory: loclient
       - uses: actions/upload-artifact@v4
         with:
           name: visualclient-jar
-          path: build/libs/*.jar
+          path: loclient/build/libs/*.jar
