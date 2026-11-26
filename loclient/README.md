@@ -19,10 +19,15 @@ Cosmetic only: reads your own game state and draws on your own screen. Server-sa
 - Round pill main-menu buttons that grow and glow on hover
 - Waypoints (/wp add|remove|list, or bind a key), 3 profile slots, Mod Menu integration
 
-## Keys
-No key is bound by default. Set your own in Settings > Keys (click a key, press the new one;
-Backspace clears, Esc cancels). They also show up in Options > Controls > Lo Client.
-Waypoints: /wp add|remove|list.
+## Keys and modules
+Options > Controls only has "Open settings". Everything else is a module: open Lo Client settings
+> Modules to switch each one on or off and give it its own key (click the key box, press a key;
+Backspace clears, Esc cancels). No module has a key by default. Waypoints: /wp add|remove|list.
+
+## Menu color
+Settings > Style > "Menu color" recolors the buttons, sliders, text fields, scrollbars and list
+backgrounds in every menu (pause menu, multiplayer, options). They are drawn round and in high
+resolution, not pixelated. The game reloads resources briefly after you pick a color.
 
 ## Item glint color
 Pick the color in Settings > World. The mod writes the "Lo Client Glint" resource pack and

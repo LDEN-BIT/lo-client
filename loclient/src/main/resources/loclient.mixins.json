@@ -11,7 +11,8 @@
     "EntityMixin",
     "CameraMixin",
     "ShapeRendererMixin",
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "ServerEntryMixin"
   ],
   "injectors": { "defaultRequire": 1 }
 }

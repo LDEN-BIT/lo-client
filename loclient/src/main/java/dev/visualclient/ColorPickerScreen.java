@@ -185,8 +185,8 @@ public class ColorPickerScreen extends Screen {
         int accent = Hud.accent(c);
 
         g.fill(0, 0, this.width, this.height, 0xAA000000);
-        UI.rect(g, px, py, pw, ph, 0xF2101018);
-        UI.border(g, px, py, pw, ph, 0xFF2A2A3C);
+        UI.roundRect(g, px, py, pw, ph, 16, 0xF2101018);
+        UI.roundRing(g, px, py, pw, ph, 16, 0xFF2A2A3C);
         g.drawString(this.font, label, px + 12, py + 12, accent, true);
 
         // Wheel: hue = angle, saturation = distance from the middle
@@ -227,9 +227,9 @@ public class ColorPickerScreen extends Screen {
         g.drawString(this.font, "Presets", px + 170, py + 100, 0xFF9999BB, false);
         for (int i = 0; i < PRESETS.length; i++) {
             int x = px + 170 + (i % 4) * 28, y = py + 112 + (i / 4) * 28;
-            UI.rect(g, x, y, 24, 24, 0xFF000000 | PRESETS[i]);
+            UI.roundRect(g, x, y, 24, 24, 12, 0xFF000000 | PRESETS[i]);
             boolean hover = UI.in(mx, my, x, y, 24, 24);
-            UI.border(g, x, y, 24, 24, hover ? 0xFFFFFFFF : 0xFF2A2A3C);
+            UI.roundRing(g, x, y, 24, 24, 12, hover ? 0xFFFFFFFF : 0xFF2A2A3C);
             if (hover) {
                 String n = PRESET_NAMES[i];
                 g.drawString(this.font, n, px + 170, py + 170, 0xFFFFFFFF, false);
@@ -238,13 +238,13 @@ public class ColorPickerScreen extends Screen {
 
         // Preview + Done
         int now = currentRgb();
-        UI.rect(g, px + 16, py + ph - 38, 60, 22, 0xFF000000 | now);
-        UI.border(g, px + 16, py + ph - 38, 60, 22, 0xFF2A2A3C);
+        UI.roundRect(g, px + 16, py + ph - 38, 60, 22, 11, 0xFF000000 | now);
+        UI.roundRing(g, px + 16, py + ph - 38, 60, 22, 11, 0xFF2A2A3C);
         g.drawString(this.font, hexString(now), px + 84, py + ph - 31, 0xFFFFFFFF, false);
 
         int dx = px + pw - 84, dy = py + ph - 30;
         boolean hv = UI.in(mx, my, dx, dy, 70, 20);
-        UI.rect(g, dx, dy, 70, 20, hv ? 0x66FFFFFF : 0x33FFFFFF);
+        UI.roundRect(g, dx, dy, 70, 20, 10, hv ? 0x66FFFFFF : 0x33FFFFFF);
         g.drawString(this.font, "Done", dx + 35 - this.font.width("Done") / 2, dy + 6, hv ? 0xFFFFFFFF : accent, false);
     }
 

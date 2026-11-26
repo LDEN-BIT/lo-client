@@ -61,6 +61,11 @@ public class Config {
     public int outlineColor = 0x8F6BFF;
     public int glintColor = 0x55AAFF;   // written to a generated resource pack
 
+    // Module keys (id -> GLFW key code), menu color and zoom module switch
+    public java.util.Map<String, Integer> keys = new java.util.HashMap<>();
+    public int menuColor = 0x966EFF;     // buttons, lists, scrollbars in every menu
+    public boolean zoomModule = true;
+
     // Fonts / packs / light
     public String font = "Default";      // "Default" = vanilla Minecraft font
     public float fontSize = 10f;

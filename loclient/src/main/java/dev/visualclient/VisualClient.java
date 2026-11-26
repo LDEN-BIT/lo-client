@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class VisualClient implements ClientModInitializer {
     public static final String MOD_ID = "loclient";
-    public static final String VERSION = "1.5.0";
+    public static final String VERSION = "1.5.1";
 
     private static KeyMapping toggleHud, toggleKeys, cycleCorner, zoomKey, settingsKey,
             freelookKey, waypointKey, editorKey, fullbrightKey;
@@ -37,15 +37,19 @@ public class VisualClient implements ClientModInitializer {
         KeyMapping.Category category = KeyMapping.Category.register(
                 Identifier.fromNamespaceAndPath(MOD_ID, "main"));
 
-        toggleHud = reg("key.loclient.toggle_hud", category);
-        toggleKeys = reg("key.loclient.toggle_keys", category);
-        cycleCorner = reg("key.loclient.cycle_corner", category);
-        zoomKey = reg("key.loclient.zoom", category);
-        settingsKey = reg("key.loclient.settings", category);
-        freelookKey = reg("key.loclient.freelook", category);
-        waypointKey = reg("key.loclient.waypoint", category);
-        editorKey = reg("key.loclient.hud_editor", category);
-        fullbrightKey = reg("key.loclient.fullbright", category);
+        // Only "Open settings" is in Options > Controls. Every other key is a module key that you
+        // set inside Lo Client settings > Modules (see Modules.java).
+        settingsKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.loclient.settings",
+                InputConstants.Type.KEYSYM, InputConstants.KEY_RSHIFT, category));
+        Modules.init(category);
+        toggleHud = Modules.key("hud");
+        toggleKeys = Modules.key("keystrokes");
+        cycleCorner = Modules.key("corner");
+        zoomKey = Modules.key("zoom");
+        freelookKey = Modules.key("freelook");
+        waypointKey = Modules.key("waypoint");
+        editorKey = Modules.key("editor");
+        fullbrightKey = Modules.key("fullbright");
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             Config c = Config.get();
@@ -55,7 +59,7 @@ public class VisualClient implements ClientModInitializer {
                 if (c.packsOnTop) Packs.sync(false);
             }
 
-            Zoom.active = zoomKey.isDown() && client.screen == null;
+            Zoom.active = c.zoomModule && zoomKey.isDown() && client.screen == null;
 
             boolean wantFree = c.freelook && freelookKey.isDown()
                     && client.screen == null && client.player != null;
@@ -139,17 +143,6 @@ public class VisualClient implements ClientModInitializer {
                                     }
                                     return 1;
                                 }))));
-    }
-
-    /** All Lo Client keys, in order, for the Keys tab in settings. */
-    public static final java.util.List<KeyMapping> KEYS = new java.util.ArrayList<>();
-
-    /** Every key starts unbound; players choose their own in Lo Client settings > Keys (or Controls). */
-    private static KeyMapping reg(String name, KeyMapping.Category category) {
-        KeyMapping km = KeyBindingHelper.registerKeyBinding(
-                new KeyMapping(name, InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), category));
-        KEYS.add(km);
-        return km;
     }
 
     private static void notice(Minecraft mc, String text) {

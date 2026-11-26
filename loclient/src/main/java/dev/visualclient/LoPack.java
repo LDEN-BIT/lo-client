@@ -47,10 +47,19 @@ public final class LoPack {
             Files.createDirectories(root);
             Files.writeString(root.resolve("pack.mcmeta"), MCMETA);
 
-            for (String f : GUI_FILES) copyTheme(root, f);
-            for (String s : SPRITES) {
-                copyTheme(root, "sprites/widget/" + s + ".png");
-                copyTheme(root, "sprites/widget/" + s + ".png.mcmeta");
+            boolean themed = false;
+            try {
+                ThemeTextures.write(root, c.menuColor); // round textures in your menu color
+                themed = true;
+            } catch (Throwable t) {
+                System.err.println("[Lo Client] Could not draw the menu color textures, using defaults: " + t);
+            }
+            if (!themed) {
+                for (String f : GUI_FILES) copyTheme(root, f);
+                for (String s : SPRITES) {
+                    copyTheme(root, "sprites/widget/" + s + ".png");
+                    copyTheme(root, "sprites/widget/" + s + ".png.mcmeta");
+                }
             }
 
             if (LoFonts.isCustom(c) && LoFonts.isBitmap(c.font)) {

@@ -5,7 +5,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -23,7 +22,7 @@ import java.util.function.Supplier;
  * smooth scrollbar over invisible vanilla widgets that do the clicking.
  */
 public class SettingsScreen extends Screen {
-    private static final String[] TABS = {"HUD", "Style", "World", "Camera", "Waypoints", "Profiles", "Keys"};
+    private static final String[] TABS = {"HUD", "Style", "World", "Camera", "Waypoints", "Profiles", "Modules"};
     private static final String[] CROSSHAIRS = {"Vanilla", "Dot", "Cross", "Circle"};
 
     private static final float[] SIZES = {8f, 9f, 10f, 11f, 12f, 13f, 14f};
@@ -37,7 +36,7 @@ public class SettingsScreen extends Screen {
     private int cx, cy, colW, viewH;
     private int slot;
     private boolean rebuild;
-    private KeyMapping waiting; // key being rebound
+    private String waitingId; // module whose key is being rebound
 
     // Smooth scrolling
     private float scroll = 0f, scrollTarget = 0f;
@@ -127,6 +126,7 @@ public class SettingsScreen extends Screen {
             case 1 -> {
                 toggle("Rainbow accent", () -> c.rainbow, v -> c.rainbow = v);
                 color("Theme color", () -> c.accentColor, v -> { c.accentColor = v; c.rainbow = false; }, null);
+                color("Menu color (buttons, lists)", () -> c.menuColor, v -> c.menuColor = v, () -> applyPacks(c));
                 color("HUD text color", () -> c.hudTextColor, v -> c.hudTextColor = v, null);
                 color("Panel color", () -> c.panelColor, v -> c.panelColor = v, null);
                 slider("Panel opacity", 0f, 1f, () -> c.bgOpacity, v -> c.bgOpacity = v);
@@ -214,17 +214,17 @@ public class SettingsScreen extends Screen {
                 }
             }
             case 6 -> {
-                for (KeyMapping km : VisualClient.KEYS) {
-                    Item it = next(Kind.CYCLE, Component.translatable(km.getName()).getString());
-                    it.text = () -> waiting == km ? "Press a key..." : km.getTranslatedKeyMessage().getString();
-                    it.widget = UI.ghost(it.x, it.y, it.w, it.h, () -> waiting = km);
-                    addRenderableWidget(it.widget);
-                }
-                action("Unbind all", "Clear", () -> {
-                    for (KeyMapping km : VisualClient.KEYS) km.setKey(InputConstants.UNKNOWN);
-                    KeyMapping.resetMapping();
-                    Minecraft.getInstance().options.save();
-                    status = "All Lo Client keys cleared.";
+                moduleRow("HUD", "hud", () -> c.hud, v -> c.hud = v);
+                moduleRow("Keystrokes", "keystrokes", () -> c.keystrokes, v -> c.keystrokes = v);
+                moduleRow("Freelook", "freelook", () -> c.freelook, v -> c.freelook = v);
+                moduleRow("Zoom", "zoom", () -> c.zoomModule, v -> c.zoomModule = v);
+                moduleRow("Fullbright", "fullbright", () -> c.fullbright, v -> c.fullbright = v);
+                moduleRow("Waypoints", "waypoint", () -> c.showWaypoints, v -> c.showWaypoints = v);
+                keyItem("HUD layout editor key", "editor");
+                keyItem("Next HUD corner key", "corner");
+                action("Clear all module keys", "Clear", () -> {
+                    Modules.clearAll();
+                    status = "All module keys cleared.";
                 });
             }
             default -> {}
@@ -282,6 +282,18 @@ public class SettingsScreen extends Screen {
         it.text = () -> names[get.get()];
         it.widget = UI.ghost(it.x, it.y, it.w, it.h, () -> set.accept((get.get() + 1) % names.length));
         addRenderableWidget(it.widget);
+    }
+
+    private void keyItem(String label, String id) {
+        Item it = next(Kind.CYCLE, label);
+        it.text = () -> id.equals(waitingId) ? "Press a key..." : Modules.name(id);
+        it.widget = UI.ghost(it.x, it.y, it.w, it.h, () -> waitingId = id);
+        addRenderableWidget(it.widget);
+    }
+
+    private void moduleRow(String label, String id, Supplier<Boolean> get, Consumer<Boolean> set) {
+        toggle(label, get, set);
+        keyItem(label + " key", id);
     }
 
     private void slider(String label, float min, float max, Supplier<Float> get, Consumer<Float> set) {
@@ -396,9 +408,9 @@ public class SettingsScreen extends Screen {
         open = 1f - (1f - open) * (1f - open);
 
         g.fill(0, 0, this.width, this.height, ((int) (0x88 * open)) << 24);
-        UI.rect(g, px, py, pw, ph, 0xF2101018);
-        UI.border(g, px, py, pw, ph, 0xFF2A2A3C);
-        g.fill(px + 92, py + 12, px + 93, py + ph - 12, 0xFF2A2A3C);
+        UI.roundRect(g, px, py, pw, ph, 16, 0xF2101018);
+        UI.roundRing(g, px, py, pw, ph, 16, 0x80000000 | (accent & 0xFFFFFF));
+        g.fill(px + 92, py + 14, px + 93, py + ph - 14, 0xFF2A2A3C);
 
         g.drawString(this.font, "Lo Client", px + 10, py + 12, accent, true);
         g.drawString(this.font, "x", px + pw - 19, py + 11,
@@ -410,10 +422,9 @@ public class SettingsScreen extends Screen {
             boolean sel = i == tab;
             boolean hover = UI.in(mx, my, x, y, 76, 20);
             if (sel) {
-                UI.rect(g, x, y, 76, 20, 0x33FFFFFF);
-                g.fill(x, y + 3, x + 2, y + 17, accent);
+                UI.roundRect(g, x, y, 76, 20, 10, 0x55000000 | (accent & 0xFFFFFF));
             } else if (hover) {
-                UI.rect(g, x, y, 76, 20, 0x18FFFFFF);
+                UI.roundRect(g, x, y, 76, 20, 10, 0x18FFFFFF);
             }
             g.drawString(this.font, TABS[i], x + 9, y + 6, sel ? 0xFFFFFFFF : 0xFFAAAABB, false);
         }
@@ -426,16 +437,16 @@ public class SettingsScreen extends Screen {
             boolean hoverNow = UI.in(mx, my, it.x, iy, it.w, it.h) && my >= cy && my < cy + viewH;
             it.hover += ((hoverNow ? 1f : 0f) - it.hover) * ease;
             int bgA = (int) (0x18 + 0x18 * it.hover);
-            UI.rect(g, it.x, iy, it.w, it.h, (bgA << 24) | 0xFFFFFF);
+            UI.roundRect(g, it.x, iy, it.w, it.h, 10, (bgA << 24) | 0xFFFFFF);
 
             switch (it.kind) {
                 case TOGGLE -> {
                     g.drawString(this.font, it.label, it.x + 8, iy + 7, 0xFFFFFFFF, false);
                     boolean on = it.on.get();
                     int sx = it.x + it.w - 30, sy = iy + 5;
-                    UI.rect(g, sx, sy, 22, 11, on ? accent : 0xFF3A3A4A);
+                    UI.roundRect(g, sx, sy, 22, 11, 5, on ? accent : 0xFF3A3A4A);
                     int kx = on ? sx + 12 : sx + 1;
-                    g.fill(kx, sy + 1, kx + 9, sy + 10, 0xFFFFFFFF);
+                    UI.roundRect(g, kx, sy + 1, 9, 9, 4, 0xFFFFFFFF);
                 }
                 case SLIDER -> {
                     float frac = it.slider.frac();
@@ -445,18 +456,18 @@ public class SettingsScreen extends Screen {
                     g.drawString(this.font, vs, it.x + it.w - 8 - this.font.width(vs), iy + 3,
                             0xFFAAAABB, false);
                     int tx = it.x + 8, tw = it.w - 16, ty = iy + it.h - 6;
-                    g.fill(tx, ty, tx + tw, ty + 2, 0xFF3A3A4A);
-                    g.fill(tx, ty, tx + (int) (tw * frac), ty + 2, accent);
+                    UI.roundRect(g, tx, ty, tw, 2, 1, 0xFF3A3A4A);
+                    UI.roundRect(g, tx, ty, Math.max(2, (int) (tw * frac)), 2, 1, accent);
                     int kx = tx + (int) (tw * frac);
-                    g.fill(kx - 2, ty - 2, kx + 2, ty + 4, 0xFFFFFFFF);
+                    UI.roundRect(g, kx - 3, ty - 3, 7, 7, 3, 0xFFFFFFFF);
                 }
                 case COLOR -> {
                     String label = trim(it.label, it.w - 80);
                     g.drawString(this.font, label, it.x + 8, iy + 7, 0xFFFFFFFF, false);
                     int rgb = it.color.getAsInt() & 0xFFFFFF;
                     int swX = it.x + it.w - 26;
-                    UI.rect(g, swX, iy + 4, 20, 13, 0xFF000000 | rgb);
-                    UI.border(g, swX, iy + 4, 20, 13, hoverNow ? 0xFFFFFFFF : 0xFF4A4A5C);
+                    UI.roundRect(g, swX, iy + 4, 20, 13, 6, 0xFF000000 | rgb);
+                    UI.roundRing(g, swX, iy + 4, 20, 13, 6, hoverNow ? 0xFFFFFFFF : 0xFF4A4A5C);
                     String hx = String.format("#%06X", rgb);
                     g.drawString(this.font, hx, swX - 4 - this.font.width(hx), iy + 7, 0xFFAAAABB, false);
                 }
@@ -467,7 +478,7 @@ public class SettingsScreen extends Screen {
                     int cw = this.font.width(chip) + 12;
                     int chx = it.x + it.w - cw - 4;
                     int chA = (int) (0x30 + 0x25 * it.hover);
-                    UI.rect(g, chx, iy + 3, cw, it.h - 6, (chA << 24) | 0xFFFFFF);
+                    UI.roundRect(g, chx, iy + 3, cw, it.h - 6, (it.h - 6) / 2, (chA << 24) | 0xFFFFFF);
                     g.drawString(this.font, chip, chx + 6, iy + 7, accent, false);
                 }
             }
@@ -477,20 +488,20 @@ public class SettingsScreen extends Screen {
         // Scrollbar
         if (max > 0) {
             int trackX = trackX(), thumbH = thumbH();
-            UI.rect(g, trackX, cy, 4, viewH, 0x30FFFFFF);
+            UI.roundRect(g, trackX, cy, 4, viewH, 2, 0x30FFFFFF);
             int thumbY = cy + (int) ((viewH - thumbH) * (scroll / max));
             boolean thumbHover = draggingBar || UI.in(mx, my, trackX - 3, cy, 12, viewH);
-            UI.rect(g, trackX, thumbY, 4, thumbH, thumbHover ? 0xFFFFFFFF : accent);
+            UI.roundRect(g, trackX, thumbY, 4, thumbH, 2, thumbHover ? 0xFFFFFFFF : accent);
         }
 
         // Hints
         String hint = switch (tab) {
-            case 0 -> "Edit layout lets you drag HUD elements (or bind a key in the Keys tab).";
+            case 0 -> "Edit layout lets you drag HUD elements (or bind a key in the Modules tab).";
             case 1 -> "Fonts apply through the Lo Client resource pack (the game reloads briefly).";
-            case 2 -> "Fullbright can also be bound to a key (Keys tab). Glint color is applied through a Lo Client resource pack.";
-            case 3 -> "Hold your freelook key to look around, hold your zoom key to zoom.";
-            case 6 -> "Click a key, then press the new one. Backspace clears, Esc cancels.";
-            case 4 -> "Press B in game to drop a waypoint. Commands: /wp add, /wp remove, /wp list";
+            case 2 -> "Fullbright has its own switch and key in the Modules tab. Glint color is applied through a Lo Client resource pack.";
+            case 3 -> "Turn modules on or off and give them keys in the Modules tab.";
+            case 6 -> "Click a key box, then press the new key. Backspace clears it, Esc cancels.";
+            case 4 -> "Bind a waypoint key in the Modules tab. Commands: /wp add, /wp remove, /wp list";
             case 5 -> "Profiles store all your look and camera settings. Waypoints are kept separate.";
             default -> "";
         };
@@ -509,20 +520,15 @@ public class SettingsScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (waiting != null) {
-            KeyMapping km = waiting;
-            waiting = null;
+        if (waitingId != null) {
+            String id = waitingId;
+            waitingId = null;
             int key = event.key();
             if (key == InputConstants.KEY_ESCAPE) {
                 return true; // cancel
             }
-            if (key == InputConstants.KEY_BACKSPACE || key == InputConstants.KEY_DELETE) {
-                km.setKey(InputConstants.UNKNOWN);
-            } else {
-                km.setKey(InputConstants.Type.KEYSYM.getOrCreate(key));
-            }
-            KeyMapping.resetMapping();
-            Minecraft.getInstance().options.save();
+            boolean clear = key == InputConstants.KEY_BACKSPACE || key == InputConstants.KEY_DELETE;
+            Modules.set(id, clear ? -1 : key);
             return true;
         }
         return super.keyPressed(event);
@@ -536,7 +542,7 @@ public class SettingsScreen extends Screen {
     @Override
     public void onClose() {
         status = "";
-        waiting = null;
+        waitingId = null;
         Minecraft.getInstance().setScreen(parent);
     }
 }

@@ -18,19 +18,34 @@ public final class UI {
         g.fill(x, y + 1, x + w, y + h - 1, color);
     }
 
-    private static int cornerInset(int row, int h, int r) {
+    private static double cornerInsetF(int row, int h, int r) {
         int k = Math.min(row, h - 1 - row);
         if (k >= r) return 0;
         double dy = r - (k + 0.5);
-        return (int) Math.round(r - Math.sqrt(Math.max(0, r * r - dy * dy)));
+        return r - Math.sqrt(Math.max(0, r * r - dy * dy));
     }
 
-    /** Filled rounded rectangle; r = h / 2 gives a fully round (pill) shape. */
+    private static int cornerInset(int row, int h, int r) {
+        return (int) Math.round(cornerInsetF(row, h, r));
+    }
+
+    /** Filled rounded rectangle with smoothed edges; r = h / 2 gives a fully round (pill) shape. */
     public static void roundRect(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
         int rr = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+        int alpha = color >>> 24;
+        int rgb = color & 0xFFFFFF;
         for (int row = 0; row < h; row++) {
-            int in = cornerInset(row, h, rr);
-            g.fill(x + in, y + row, x + w - in, y + row + 1, color);
+            double inset = cornerInsetF(row, h, rr);
+            int full = (int) Math.ceil(inset);
+            g.fill(x + full, y + row, x + w - full, y + row + 1, color);
+            if (full > 0) {
+                int a = Math.round(alpha * (float) (full - inset)); // partly covered edge pixel
+                if (a > 0) {
+                    int edge = (a << 24) | rgb;
+                    g.fill(x + full - 1, y + row, x + full, y + row + 1, edge);
+                    g.fill(x + w - full, y + row, x + w - full + 1, y + row + 1, edge);
+                }
+            }
         }
     }
 
