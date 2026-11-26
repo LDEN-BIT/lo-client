@@ -34,7 +34,7 @@ final class ThemeTextures {
         int[] white = {255, 255, 255};
 
         sprite(widget, "button", 200, 20, 8, argb(mix(DARK, c, 0.07f), 235), argb(mix(DARK_BORDER, c, 0.5f), 255), 1f, "8");
-        sprite(widget, "button_highlighted", 200, 20, 8, argb(mix(DARK, c, 0.22f), 245), argb(c, 255), 1f, "8");
+        sprite(widget, "button_highlighted", 200, 20, 8, argb(mix(DARK, c, 0.30f), 245), argb(c, 255), 1f, "8");
         sprite(widget, "button_disabled", 200, 20, 8, argb(new int[]{14, 14, 22}, 200), argb(new int[]{40, 40, 56}, 255), 1f, "8");
         sprite(widget, "slider", 200, 20, 8, argb(new int[]{12, 12, 24}, 235), argb(mix(DARK_BORDER, c, 0.5f), 255), 1f, "8");
         sprite(widget, "slider_highlighted", 200, 20, 8, argb(mix(new int[]{12, 12, 24}, c, 0.12f), 245), argb(c, 255), 1f, "8");

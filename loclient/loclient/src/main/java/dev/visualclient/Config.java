@@ -63,7 +63,7 @@ public class Config {
 
     // Module keys (id -> GLFW key code), menu color and zoom module switch
     public java.util.Map<String, Integer> keys = new java.util.HashMap<>();
-    public int menuColor = 0x966EFF;     // buttons, lists, scrollbars in every menu
+    public int menuColor = 0xB4B4BC;     // buttons, lists, scrollbars in every menu
     public boolean zoomModule = true;
 
     // Fonts / packs / light

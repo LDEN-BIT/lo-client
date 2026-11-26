@@ -25,7 +25,7 @@ Options > Controls only has "Open settings". Everything else is a module: open L
 Backspace clears, Esc cancels). No module has a key by default. Waypoints: /wp add|remove|list.
 
 ## Menu color
-Settings > Style > "Menu color" recolors the buttons, sliders, text fields, scrollbars and list
+Settings > Style > "Menu color" (default light gray) recolors the buttons, sliders, text fields, scrollbars and list
 backgrounds in every menu (pause menu, multiplayer, options). They are drawn round and in high
 resolution, not pixelated. The game reloads resources briefly after you pick a color.
 

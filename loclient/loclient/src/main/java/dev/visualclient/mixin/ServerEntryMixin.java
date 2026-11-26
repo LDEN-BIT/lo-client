@@ -1,7 +1,6 @@
 package dev.visualclient.mixin;
 
 import dev.visualclient.Config;
-import dev.visualclient.Hud;
 import dev.visualclient.UI;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
@@ -21,7 +20,7 @@ public abstract class ServerEntryMixin {
         int x = self.getContentX();
         int y = self.getContentY();
         int w = self.getContentWidth();
-        int accent = Hud.accent(Config.get()) & 0xFFFFFF;
+        int accent = Config.get().menuColor & 0xFFFFFF;
         int sx = x - 6, sy = y - 1, sw = w + 12, sh = 34;
         UI.roundRect(g, sx, sy, sw, sh, 17, ((hovered ? 0x44 : 0x24) << 24) | accent);
         UI.roundRing(g, sx, sy, sw, sh, 17, ((hovered ? 0xC0 : 0x66) << 24) | accent);
