@@ -1,0 +1,18 @@
+{
+ "providers": [
+  {
+   "type": "ttf",
+   "file": "loclient:tektur.ttf",
+   "shift": [
+    0,
+    0
+   ],
+   "size": 9.5,
+   "oversample": 4.0
+  },
+  {
+   "type": "reference",
+   "id": "minecraft:default"
+  }
+ ]
+}
